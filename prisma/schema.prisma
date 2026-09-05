@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile      StudentProfile?
+  documents    IngestedDocument[]
+  chatSessions ChatSession[]
+  quizzes      QuizResult[]
+  notes        SmartNote[]
+  videoSessions VideoSession[]
+}
+
+model StudentProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  targetExam      String   @default("CBSE")
+  learningStyle   String   @default("Socratic & Visual")
+  level           String   @default("Intermediate")
+  xp              Int      @default(0)
+  streak          Int      @default(0)
+  totalStudyMinutes Int    @default(0)
+  lastActiveAt    DateTime @default(now())
+
+  weakConcepts    String   @default("[]") // JSON array
+  strongConcepts  String   @default("[]") // JSON array
+  badges          String   @default("[]") // JSON array
+  studyHistory    String   @default("[]") // JSON array
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model IngestedDocument {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title        String
+  fileType     String
+  fileSizeBytes Int     @default(0)
+  totalChunks  Int      @default(0)
+  summary      String   @default("")
+  keyTopics    String   @default("[]") // JSON array
+  cloudinaryUrl String?
+
+  createdAt    DateTime @default(now())
+
+  chunks       DocumentChunk[]
+  studyPacks   StudyPack[]
+}
+
+model DocumentChunk {
+  id           String   @id @default(cuid())
+  documentId   String
+  document     IngestedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  chunkIndex   Int
+  text         String
+  tokenCount   Int      @default(0)
+  sectionTitle String   @default("")
+  pageOrSlide  Int?
+  keywords     String   @default("[]") // JSON array
+}
+
+model ChatSession {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  topic        String   @default("General")
+  documentId   String?
+  language     String   @default("English")
+  persona      String   @default("vikram")
+
+  createdAt    DateTime @default(now())
+
+  messages     ChatMessage[]
+}
+
+model ChatMessage {
+  id           String   @id @default(cuid())
+  sessionId    String
+  session      ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  role         String   // "user" | "assistant"
+  content      String
+  citations    String   @default("[]") // JSON array
+
+  createdAt    DateTime @default(now())
+}
+
+model QuizResult {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  topic        String
+  difficulty   String   @default("Medium")
+  totalQuestions Int
+  correctAnswers Int    @default(0)
+  scorePercent Int      @default(0)
+  xpEarned     Int      @default(0)
+  questions    String   // JSON array of questions with answers
+  documentId   String?
+
+  createdAt    DateTime @default(now())
+}
+
+model SmartNote {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  topic        String
+  content      String   // Full JSON of notes/flashcards/cheat sheet
+  noteType     String   @default("notes") // "notes" | "flashcards" | "cheatheet"
+
+  createdAt    DateTime @default(now())
+}
+
+model VideoSession {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  topic        String
+  documentId   String?
+  slideCount   Int      @default(5)
+  content      String   // Full JSON of video lecture data
+
+  createdAt    DateTime @default(now())
+}
+
+model StudyPack {
+  id           String   @id @default(cuid())
+  userId       String
+  documentId   String
+  document     IngestedDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  notesId      String?
+  quizId       String?
+  diagramId    String?
+  videoSessionId String?
+  videoStatus  String   @default("pending") // pending | processing | ready | failed
+
+  createdAt    DateTime @default(now())
+}
+
+model DiagramResult {
+  id           String   @id @default(cuid())
+  userId       String
+  documentId   String?
+  topic        String
+  content      String   // JSON of the generated diagram
+
+  createdAt    DateTime @default(now())
+}

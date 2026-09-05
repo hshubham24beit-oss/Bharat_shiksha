@@ -1,0 +1,6 @@
+{
+  "name": "Bharat Shikshak AI - Autonomous AI Teacher Platform",
+  "description": "Production-grade Socratic AI Teacher platform featuring dynamic lesson plans, multimodal RAG document learning, interactive misconception detection, adaptive difficulty, voice tutoring, AI video lectures, and rich progress analytics for Bharat Academix.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
